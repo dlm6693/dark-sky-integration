@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#more stuff
+2020-01-13_forecasts.json
+2020-01-14_forecasts.json
+secret_key.txt
+.ipynb_checkpoints/
