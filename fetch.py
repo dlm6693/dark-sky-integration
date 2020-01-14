@@ -17,6 +17,8 @@ loc_data = pd.read_csv("uscities.csv")
 # pull out only lat/long cols and limit to 1000 rows for API call
 lat_long = loc_data[["lat", "lng"]]
 
+#data points to exclude in request
+exclude="currently,minutely"
 # invidiaul request
 async def fetch(session, url):
     async with session.get(url) as response:
@@ -35,13 +37,13 @@ async def fetch_all(session, urls):
 
 
 # the function that runs the requests
-async def main(url_template, secret_key, loc_data):
+async def main(url_template, secret_key, loc_data, exclude_args):
     base_url = f"{url_template}{secret_key}"
     urls = []
     for index, row in loc_data.iterrows():
         lat = row["lat"]
         long = row["lng"]
-        url = f"{base_url}/{lat},{long}/"
+        url = f"{base_url}/{lat},{long}/?exclude={exclude_args}"
         urls.append(url)
 
     async with aiohttp.ClientSession() as session:
@@ -64,4 +66,4 @@ async def main(url_template, secret_key, loc_data):
 
 # calling main
 if __name__ == "__main__":
-    asyncio.run(main(url_template=template, secret_key=key, loc_data=lat_long))
+    asyncio.run(main(url_template=template, secret_key=key, loc_data=lat_long, exclude_args = exclude))
