@@ -74,10 +74,17 @@ WSGI_APPLICATION = 'dark_sky_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+with open('db_pass.txt', 'r') as f:
+    db_pass = f.read()
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'dark_sky_data',
+        'USER': 'darksky',
+        'PASSWORD': db_pass,
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
