@@ -6,21 +6,12 @@ class Base(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     geohash = models.CharField(max_length=12, primary_key=True)
-    
-    class Meta:
-        abtract = True
-
-class AlertsHourlyBase(Base):
     time = models.DateTimeField()
     
     class Meta:
         abtract = True
-
-class StatsBase(Base):
     
-
-
-class Alerts(AlertsHourlyBase):
+class Alerts(Base):
     
     title = models.CharField(max_length=255)
     severity = models.CharField(max_length=100)
@@ -36,7 +27,7 @@ class Alerts(AlertsHourlyBase):
     def __str__(self):
         return self.title
     
-class AlertRegions(AlertsHourlyBase):
+class AlertRegions(Base):
     
     region = models.CharField(max_length=255)
     expires = models.DateTimeField()
@@ -58,30 +49,36 @@ class InfoBase(Base):
     
     class Meta:
         abtract = True
+        
+    def __str__(self):
+        return f"{self.geohash}, {self.time}"
 
-class HourlyInfo(AlertsHourlyBase, InfoBase):
+class HourlyInfo(InfoBase):
     
     stats = models.ForeignKey('HourlyStats', related_name = 'info', on_delete=models.CASCADE)
     
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['latitude', 'longitude', 'time'], name='hourly_info_unique_together')
+            models.UniqueConstraint(fields=['geohash', 'time'], name='hourly_info_unique_together')
+            ]
+
+class DailyInfo(InfoBase):
+    
+    stats = models.ForeignKey('DailyStats', related_name = 'info', on_delete=models.CASCADE)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['geohash', 'time'], name='daily_info_unique_together')
             ]
     
-    def __str__(self):
-        return f"{self.latitude}, {self.longitude}, {self.time}"
-    
 
-class BaseStats(models.Model):
+class StatsBase(Base):
     
-
-class HourlyStats(models.Model):
-    
-    apparentTemperature = models.FloatField()
     cloudCover = models.FloatField(
         validators=[MinValueValidator(0), 
                     MaxValueValidator(1)]
     )
+    dewPoint = models.FloatField()
     humidity = models.FloatField(
         validators=[MinValueValidator(0), 
                     MaxValueValidator(1)])
@@ -94,16 +91,7 @@ class HourlyStats(models.Model):
         validators=[MinValueValidator(0), 
                     MaxValueValidator(1)]
     )
-    precipAccumulation = models.FloatField(
-        validators = [MinValueValidator(0)]
-    )
-    precipIntensity = models.FloatField()
-    precipProbability = models.FloatField(
-        validators=[MinValueValidator(0), 
-                    MaxValueValidator(1)])
     pressure = models.FloatField()
-    temperature = models.FloatField()
-    time = models.DateTimeField()
     uvIndex = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), 
                     MaxValueValidator(10)]
@@ -121,3 +109,52 @@ class HourlyStats(models.Model):
     windSpeed = models.FloatField(
         validators = [MinValueValidator(0)]
     )
+    
+    class Meta:
+        abtract = True
+        
+    def __str__(self):
+        return f"{self.geohash}, {self.time}"
+        
+class HourlyStats(StatsBase):
+    
+    apparentTemperature = models.FloatField()
+    temperature = models.FloatField()
+    info = models.ForeignKey('HourlyInfo', related_name = 'stats', on_delete=models.CASCADE)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['geohash', 'time'], name='hourly_stats_unique_together')
+            ]
+    
+class DailyStats(StatsBase)    
+
+    apparentTemperatureHigh = models.FloatField()
+    apparentTemperatureHighTime = models.DateTimeField()
+    apparentTemperatureLow = models.FloatField()
+    apparentTemperatureLowTime = models.DateTimeField()
+    apparentTemperatureMax = models.FloatField()
+    apparentTemperatureMaxTime = models.DateTimeField()
+    apparentTemperatureMin = models.FloatField()
+    apparentTemperatureMinTime = models.DateTimeField()
+    moonPhase = models.FloatField(
+        validators = [MinValueValidator(0), MaxValueValidator(1)]
+    )
+    precipIntensityMax = models.FloatField()
+    precipIntensityMaxTime = models.DateTimeField()
+    sunriseTime = models.DateTimeField()
+    sunsetTime = models.DateTimeField()
+    temperatureHigh = models.FloatField()
+    temperatureHighTime = models.FloatField()
+    temperatureLow = models.FloatField()
+    temperatureLowTime = models.DateTimeField()
+    temperatureMax = models.FloatField()
+    temperatureMaxTime = models.DateTimeField()
+    temperatureMin = models.FloatField()
+    temperatureMinTime = models.DateTimeField()
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['geohash', 'time'], name='daily_stats_unique_together')
+            ]
+    
