@@ -43,6 +43,11 @@ class DataProcessor(object):
         'windSpeed',
         ]
     
+    hourly_stats_cols = [
+        'apparentTemperature',
+        'temperature',
+    ]
+    
     daily_stats_cols = [
         'apparentTemperatureHigh',
         'apparentTemperatureHighTime',
@@ -66,6 +71,14 @@ class DataProcessor(object):
         'temperatureMin',
         'temperatureMinTime',
         'windGustTime',
+    ]
+    
+    alerts_cols = [
+        'title',
+        'severity',
+        'expires',
+        'description',
+        'uri',
     ]
     
     alerts_regions_cols = [
@@ -111,31 +124,46 @@ class DataProcessor(object):
         return df.set_index('geohash')
 
     def null_handler(self, df):
-        df['precipType'] = df['preciptype'].fillna(value='none')
+        df['precipType'] = df['precipType'].fillna(value='none')
         df['precipAccumulation'] = df['precipAccumulation'].fillna(value=0)
         return df
     
     def info_df(self, df):
-        return df[cls.cols+cls.info_cols]
+        return df[self.cols+self.info_cols]
     
     def hourly_stats_df(self, df):
-        return df[cls.cols+cls.stats_cols]
+        return df[self.cols+self.stats_cols]
     
     def daily_stats_df(self, df):
-        return df[cls.cols+cls.stats_cols+cls.daily_stats_cols]
+        return df[self.cols+self.stats_cols+self.daily_stats_cols]
     
-    def alerts_regions_df(self, alerts_df):
-        alerts_df['regions'] = alerts_df['regions'].map(lambda x:x.strip("]['").split(', '))
-        regions = a
+    def alerts_regions_df(self, df):
+        df['regions'] = df['regions'].map(lambda x:x.strip("]['").split(', '))
+        regions_df = df[self.cols+self.alerts_regions_cols]
+        data = []
+        for i,v in regions_df.iterrows():
+            for lst in v['regions']:
+                data_dict = {}
+                data_dict['region'] = lst
+                data_dict['time'] = v['time']
+                data_dict['expires'] = v['expires']
+                data_dict['latitude'] = v['latitude']
+                data_dict['longitude'] = v['longitude']
+                data_dict['geohash'] = v['geohash']
+                data.append(data_dict)
+        return pd.DataFrame(data)
+    
+    def alerts_df(self, df):
+        return df[self.cols +self.alerts_cols]
     
     
     
     
     
-    
-# alerts_df = update_and_transform(data_type='alerts', data_dict=data_dict)
-# daily_df = update_and_transform(data_type='daily', data_dict=data_dict)
-# hourly_df = update_and_transform(data_type='hourly', data_dict=data_dict)
-# alerts_df.to_csv('alerts.csv', index=False)
-# daily_df.to_csv('daily.csv', index=False)
-# hourly_df.to_csv('hourly.csv', index=False)        
+dp = DataProcessor(data=data)
+alerts = dp.update_and_transform(data_type='alerts')
+daily_df = update_and_transform(data_type='daily', data_dict=data_dict)
+hourly_df = update_and_transform(data_type='hourly', data_dict=data_dict)
+alerts_df.to_csv('alerts.csv', index=False)
+daily_df.to_csv('daily.csv', index=False)
+hourly_df.to_csv('hourly.csv', index=False)        
