@@ -5,11 +5,11 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Base(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
-    geohash = models.CharField(max_length=12)
+    geohash = models.CharField(max_length=12, null=True)
     time = models.DateTimeField()
     
     class Meta:
-        abtract = True
+        abstract = True
     
 class Alerts(Base):
     
@@ -48,7 +48,7 @@ class InfoBase(Base):
     icon = models.CharField(max_length=255)
     
     class Meta:
-        abtract = True
+        abstract = True
         
     def __str__(self):
         return f"{self.geohash}, {self.time}"
@@ -78,7 +78,7 @@ class StatsBase(Base):
         validators=[MinValueValidator(0), 
                     MaxValueValidator(1)]
     )
-    dewPoint = models.FloatField()
+    dewPoint = models.FloatField(default=0)
     humidity = models.FloatField(
         validators=[MinValueValidator(0), 
                     MaxValueValidator(1)])
@@ -111,7 +111,7 @@ class StatsBase(Base):
     )
     
     class Meta:
-        abtract = True
+        abstract = True
         
     def __str__(self):
         return f"{self.geohash}, {self.time}"
@@ -120,14 +120,14 @@ class HourlyStats(StatsBase):
     
     apparentTemperature = models.FloatField()
     temperature = models.FloatField()
-    info = models.ForeignKey('HourlyInfo', related_name = 'stats', on_delete=models.CASCADE)
+    # info = models.ForeignKey('HourlyInfo', related_name = 'stats', on_delete=models.CASCADE)
     
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['geohash', 'time'], name='hourly_stats_unique_together')
             ]
     
-class DailyStats(StatsBase)    
+class DailyStats(StatsBase):    
 
     apparentTemperatureHigh = models.FloatField()
     apparentTemperatureHighTime = models.DateTimeField()
