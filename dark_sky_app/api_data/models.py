@@ -152,6 +152,7 @@ class DailyStats(StatsBase):
     temperatureMaxTime = models.DateTimeField()
     temperatureMin = models.FloatField()
     temperatureMinTime = models.DateTimeField()
+    windGustTime = models.DateTimeField()
     
     class Meta:
         constraints = [

@@ -15,7 +15,7 @@ template = "https://api.darksky.net/forecast/"
 loc_data = pd.read_csv("uscities.csv")
 
 # pull out only lat/long cols and limit to 1000 rows for API call
-lat_long = loc_data[["lat", "lng"]]
+lat_long = loc_data[["lat", "lng"]][:1000]
 
 #data points to exclude in request
 exclude="currently,minutely"

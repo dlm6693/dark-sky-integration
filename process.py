@@ -26,7 +26,6 @@ class DataProcessor(object):
                  ]
     
     stats_cols = [
-        'apparentTemperature',
         'cloudCover',
         'dewPoint',
         'humidity',
@@ -35,7 +34,6 @@ class DataProcessor(object):
         'precipIntensity',
         'precipProbability',
         'pressure',
-        'temperature',
         'uvIndex',
         'visibility',
         'windBearing',
@@ -95,6 +93,7 @@ class DataProcessor(object):
         for item in self.data_dict:
             lat = item['latitude']
             lng = item['longitude']
+            tz = item['timezone']
             if data_type in ['alerts', 'ALERTS', 'Alerts', 'alert', 'ALERT']:
                 try:
                     data = item['alerts']
@@ -107,22 +106,18 @@ class DataProcessor(object):
             else:
                 raise Exception('Unrecognized data section passed')
             for v in data:
-                v.update({'latitude':lat, 'longitude':lng})
+                v.update({'latitude':lat, 'longitude':lng, 'tzone':tz})
             refined_data.append(data)
         df_list = [pd.DataFrame(item) for item in refined_data]
         df = pd.concat(df_list)
         if 'precipType' and 'precipAccumulation' in df.columns:
             df = self.null_handler(df)
-        time_cols = [col for col in daily.columns if 'time' in col.lower() or 'expires' in col.lower()]
+        time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
         for col in time_cols:
-            try:
-                df[col] = pd.to_datetime(df[col], unit='s')
-            except:
-                continue
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+            df[col] = df.apply(lambda x: pd.Timestamp(x[col], unit='s', tz=x['tzone']), axis=1)
         df['geohash'] = df.apply(lambda x: encode(x['latitude'], x['longitude']), axis=1)
-        return df.set_index('geohash')
-
+        return df
+    
     def null_handler(self, df):
         df['precipType'] = df['precipType'].fillna(value='none')
         df['precipAccumulation'] = df['precipAccumulation'].fillna(value=0)
@@ -138,7 +133,7 @@ class DataProcessor(object):
         return df[self.cols+self.stats_cols+self.daily_stats_cols]
     
     def alerts_regions_df(self, df):
-        df['regions'] = df['regions'].map(lambda x:x.strip("]['").split(', '))
+        # df['regions'] = df['regions'].map(lambda x:x.strip("]['").split(', '))
         regions_df = df[self.cols+self.alerts_regions_cols]
         data = []
         for i,v in regions_df.iterrows():
@@ -162,8 +157,17 @@ class DataProcessor(object):
     
 dp = DataProcessor(data=data)
 alerts = dp.update_and_transform(data_type='alerts')
-daily_df = update_and_transform(data_type='daily', data_dict=data_dict)
-hourly_df = update_and_transform(data_type='hourly', data_dict=data_dict)
-alerts_df.to_csv('alerts.csv', index=False)
-daily_df.to_csv('daily.csv', index=False)
-hourly_df.to_csv('hourly.csv', index=False)        
+daily = dp.update_and_transform(data_type='daily')
+hourly = dp.update_and_transform(data_type='hourly')
+alerts_regions_df = dp.alerts_regions_df(df=alerts)
+alerts_df = dp.alerts_df(df=alerts)
+hourly_info_df = dp.info_df(df=hourly)
+hourly_stats_df = dp.hourly_stats_df(df=hourly)
+daily_info_df = dp.info_df(df=daily)
+daily_stats_df = dp.daily_stats_df(df=daily)
+alerts_regions_df.to_csv('alerts_regions.csv')
+alerts_df.to_csv('alerts.csv')
+hourly_info_df.to_csv('hourly_info.csv')
+hourly_stats_df.to_csv('hourly_stats.csv')
+daily_info_df.to_csv('daily_info.csv')
+daily_stats_df.to_csv('daily_stats.csv')      
