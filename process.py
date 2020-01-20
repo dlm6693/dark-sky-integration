@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import datetime
 import os
+from Geohash import encode
 
 #load fetched data
 files = os.listdir()
@@ -14,10 +15,14 @@ with open(last_json, encoding='utf-8') as f:
 data_dict = [json.loads(item) for item in data]
 class DataProcessor(object):
     
+    cols = ['geohash',
+            'latitude',
+            'longitude',
+            'time']
+    
     info_cols = ['icon',
                  'precipType',
-                 'summary', 
-                 'time',
+                 'summary',
                  ]
     
     stats_cols = [
@@ -31,13 +36,43 @@ class DataProcessor(object):
         'precipProbability',
         'pressure',
         'temperature',
-        'time',
         'uvIndex',
         'visibility',
         'windBearing',
         'windGust',
         'windSpeed',
         ]
+    
+    daily_stats_cols = [
+        'apparentTemperatureHigh',
+        'apparentTemperatureHighTime',
+        'apparentTemperatureLow',
+        'apparentTemperatureLowTime',
+        'apparentTemperatureMax',
+        'apparentTemperatureMaxTime',
+        'apparentTemperatureMin',
+        'apparentTemperatureMinTime',
+        'moonPhase',
+        'precipIntensityMax',
+        'precipIntensityMaxTime',
+        'sunriseTime',
+        'sunsetTime',
+        'temperatureHigh',
+        'temperatureHighTime',
+        'temperatureLow',
+        'temperatureLowTime',
+        'temperatureMax',
+        'temperatureMaxTime',
+        'temperatureMin',
+        'temperatureMinTime',
+        'windGustTime',
+    ]
+    
+    alerts_regions_cols = [
+        'expires', 
+        'regions',
+        ]
+
                     
     def __init__(self, data):
         self.data_dict = [json.loads(item) for item in data]
@@ -63,10 +98,17 @@ class DataProcessor(object):
             refined_data.append(data)
         df_list = [pd.DataFrame(item) for item in refined_data]
         df = pd.concat(df_list)
-        if 'precipType' and 'precipAccumulation' in hourly.columns:
+        if 'precipType' and 'precipAccumulation' in df.columns:
             df = self.null_handler(df)
+        time_cols = [col for col in daily.columns if 'time' in col.lower() or 'expires' in col.lower()]
+        for col in time_cols:
+            try:
+                df[col] = pd.to_datetime(df[col], unit='s')
+            except:
+                continue
         df['time'] = pd.to_datetime(df['time'], unit='s')
-        return df
+        df['geohash'] = df.apply(lambda x: encode(x['latitude'], x['longitude']), axis=1)
+        return df.set_index('geohash')
 
     def null_handler(self, df):
         df['precipType'] = df['preciptype'].fillna(value='none')
@@ -74,12 +116,17 @@ class DataProcessor(object):
         return df
     
     def info_df(self, df):
-        return df[cls.info_cols]
+        return df[cls.cols+cls.info_cols]
     
-    def stats_df(self, df):
-        return df[cls.stats_cols]
+    def hourly_stats_df(self, df):
+        return df[cls.cols+cls.stats_cols]
     
+    def daily_stats_df(self, df):
+        return df[cls.cols+cls.stats_cols+cls.daily_stats_cols]
     
+    def alerts_regions_df(self, alerts_df):
+        alerts_df['regions'] = alerts_df['regions'].map(lambda x:x.strip("]['").split(', '))
+        regions = a
     
     
     

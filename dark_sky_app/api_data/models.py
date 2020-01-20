@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Base(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
-    geohash = models.CharField(max_length=12, primary_key=True)
+    geohash = models.CharField(max_length=12)
     time = models.DateTimeField()
     
     class Meta:
@@ -21,7 +21,7 @@ class Alerts(Base):
     
     class Meta:
        constraints = [
-            models.UniqueConstraint(fields=['latitude', 'longitude', 'time', 'expires'], name='alerts_unique_together')
+            models.UniqueConstraint(fields=['geohash', 'time', 'expires'], name='alerts_unique_together')
         ]
     
     def __str__(self):
@@ -35,7 +35,7 @@ class AlertRegions(Base):
     
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['latitude', 'longitude', 'time', 'expires'], name='regions_unique_together')
+            models.UniqueConstraint(fields=['geohash', 'time', 'expires'], name='regions_unique_together')
         ]
     
     def __str__(self):
