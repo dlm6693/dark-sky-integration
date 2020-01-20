@@ -145,7 +145,7 @@ class DailyStats(StatsBase):
     sunriseTime = models.DateTimeField()
     sunsetTime = models.DateTimeField()
     temperatureHigh = models.FloatField()
-    temperatureHighTime = models.FloatField()
+    temperatureHighTime = models.DateTimeField()
     temperatureLow = models.FloatField()
     temperatureLowTime = models.DateTimeField()
     temperatureMax = models.FloatField()
