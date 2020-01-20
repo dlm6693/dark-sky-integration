@@ -2,13 +2,28 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
-class Alerts(models.Model):
-    
+class Base(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
+    geohash = models.CharField(max_length=12, primary_key=True)
+    
+    class Meta:
+        abtract = True
+
+class AlertsHourlyBase(Base):
+    time = models.DateTimeField()
+    
+    class Meta:
+        abtract = True
+
+class StatsBase(Base):
+    
+
+
+class Alerts(AlertsHourlyBase):
+    
     title = models.CharField(max_length=255)
     severity = models.CharField(max_length=100)
-    time = models.DateTimeField()
     expires = models.DateTimeField()
     description = models.TextField()
     uri = models.URLField()
@@ -21,13 +36,10 @@ class Alerts(models.Model):
     def __str__(self):
         return self.title
     
-class AlertRegions(models.Model):
+class AlertRegions(AlertsHourlyBase):
     
     region = models.CharField(max_length=255)
-    time = models.DateTimeField()
     expires = models.DateTimeField()
-    latitude = models.FloatField()
-    longitude = models.FloatField()
     alert = models.ForeignKey('Alerts', related_name = 'regions', on_delete=models.CASCADE)
     
     class Meta:
@@ -38,14 +50,17 @@ class AlertRegions(models.Model):
     def __str__(self):
         return self.region
 
-class HourlyInfo(models.Model):
+class InfoBase(Base):
     
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    icon = models.CharField(max_length=255)
     precipType = models.CharField(max_length=100)
     summary= models.CharField(max_length=255)
-    time = models.DateTimeField()
+    icon = models.CharField(max_length=255)
+    
+    class Meta:
+        abtract = True
+
+class HourlyInfo(AlertsHourlyBase, InfoBase):
+    
     stats = models.ForeignKey('HourlyStats', related_name = 'info', on_delete=models.CASCADE)
     
     class Meta:
@@ -57,10 +72,11 @@ class HourlyInfo(models.Model):
         return f"{self.latitude}, {self.longitude}, {self.time}"
     
 
+class BaseStats(models.Model):
+    
+
 class HourlyStats(models.Model):
     
-    latitude = models.FloatField()
-    longitude = models.FloatField()
     apparentTemperature = models.FloatField()
     cloudCover = models.FloatField(
         validators=[MinValueValidator(0), 

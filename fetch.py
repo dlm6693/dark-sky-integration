@@ -66,4 +66,4 @@ async def main(url_template, secret_key, loc_data, exclude_args):
 
 # calling main
 if __name__ == "__main__":
-    asyncio.run(main(url_template=template, secret_key=key, loc_data=lat_long, exclude_args = exclude))
+    asyncio.run(main(url_template=template, secret_key=key, loc_data=lat_long[:1000], exclude_args = exclude))

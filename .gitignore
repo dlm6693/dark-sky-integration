@@ -133,3 +133,4 @@ dmypy.json
 2020-01-14_forecasts.json
 secret_key.txt
 .ipynb_checkpoints/
+dark_sky_app/db_pass.txt
