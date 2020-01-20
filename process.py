@@ -158,13 +158,6 @@ class DataProcessor(object):
     
 class DataIngestor(object):
     
-    user = settings.DATABASES['default']['USER']
-    password = settings.DATABASES['default']['PASSWORD']
-    database_name = settings.DATABASES['default']['NAME']
-    host = settings.DATABASES['default']['HOST']
-    port = settings.DATABASES['default']['PORT']
-    database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
-    
     table_names = [
         'api_data_dailystats',
         'api_data_dailyinfo',
@@ -175,7 +168,14 @@ class DataIngestor(object):
     ]
 
     def __init__(self):
-        self.conn = psycopg2(dbname=database_name, user=user, host=host, password=password, port=port)
+        
+        user = settings.DATABASES['default']['USER']
+        password = settings.DATABASES['default']['PASSWORD']
+        database_name = settings.DATABASES['default']['NAME']
+        host = settings.DATABASES['default']['HOST']
+        port = settings.DATABASES['default']['PORT']
+        database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
+        self.conn = psycopg2.connect(dbname=database_name, user=user, host=host, password=password, port=port)
         self.engine = create_engine(database_url, echo=True)
         
     def ingest(self, df, table_name):
