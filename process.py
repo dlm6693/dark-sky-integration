@@ -3,6 +3,9 @@ import pandas as pd
 import datetime
 import os
 from Geohash import encode
+from dark_sky_app.dark_sky_app import settings
+from sqlalchemy import create_engine
+import psycopg2
 
 #load fetched data
 files = os.listdir()
@@ -109,12 +112,12 @@ class DataProcessor(object):
                 v.update({'latitude':lat, 'longitude':lng, 'tzone':tz})
             refined_data.append(data)
         df_list = [pd.DataFrame(item) for item in refined_data]
-        df = pd.concat(df_list)
+        df = pd.concat(df_list).reset_index(drop=True)
         if 'precipType' and 'precipAccumulation' in df.columns:
             df = self.null_handler(df)
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
         for col in time_cols:
-            df[col] = df.apply(lambda x: pd.Timestamp(x[col], unit='s', tz=x['tzone']), axis=1)
+            df[col] = df.apply(lambda x: pd.Timestamp(x[col], unit='s', tz=x['tzone']).tz_convert(tz='UTC'), axis=1)
         df['geohash'] = df.apply(lambda x: encode(x['latitude'], x['longitude']), axis=1)
         return df
     
@@ -153,21 +156,40 @@ class DataProcessor(object):
     
     
     
+class DataIngestor(object):
+    
+    user = settings.DATABASES['default']['USER']
+    password = settings.DATABASES['default']['PASSWORD']
+    database_name = settings.DATABASES['default']['NAME']
+    host = settings.DATABASES['default']['HOST']
+    port = settings.DATABASES['default']['PORT']
+    database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
+    
+    table_names = [
+        'api_data_dailystats',
+        'api_data_dailyinfo',
+        'api_data_hourlystats',
+        'api_data_hourlyinfo',
+        'api_data_alertregions',
+        'api_data_alerts',
+    ]
+
+    def __init__(self):
+        self.conn = psycopg2(dbname=database_name, user=user, host=host, password=password, port=port)
+        self.engine = create_engine(database_url, echo=True)
+        
+    def ingest(self, df, table_name):
+        df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False)
     
     
-dp = DataProcessor(data=data)
-alerts = dp.update_and_transform(data_type='alerts')
-daily = dp.update_and_transform(data_type='daily')
-hourly = dp.update_and_transform(data_type='hourly')
-alerts_regions_df = dp.alerts_regions_df(df=alerts)
-alerts_df = dp.alerts_df(df=alerts)
-hourly_info_df = dp.info_df(df=hourly)
-hourly_stats_df = dp.hourly_stats_df(df=hourly)
-daily_info_df = dp.info_df(df=daily)
-daily_stats_df = dp.daily_stats_df(df=daily)
-alerts_regions_df.to_csv('alerts_regions.csv')
-alerts_df.to_csv('alerts.csv')
-hourly_info_df.to_csv('hourly_info.csv')
-hourly_stats_df.to_csv('hourly_stats.csv')
-daily_info_df.to_csv('daily_info.csv')
-daily_stats_df.to_csv('daily_stats.csv')      
+    
+# dp = DataProcessor(data=data)
+# alerts = dp.update_and_transform(data_type='alerts')
+# daily = dp.update_and_transform(data_type='daily')
+# hourly = dp.update_and_transform(data_type='hourly')
+# alerts_regions_df = dp.alerts_regions_df(df=alerts)
+# alerts_df = dp.alerts_df(df=alerts)
+# hourly_info_df = dp.info_df(df=hourly)
+# hourly_stats_df = dp.hourly_stats_df(df=hourly)
+# daily_info_df = dp.info_df(df=daily)
+# daily_stats_df = dp.daily_stats_df(df=daily)
