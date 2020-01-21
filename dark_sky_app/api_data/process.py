@@ -198,6 +198,10 @@ class DataIngestor(object):
         
     def ingest(self, df, table_name):
         df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False)
+    
+    def dispose_and_close(self):
+        self.conn.close()
+        self.engine.dispose()
         
     
     
