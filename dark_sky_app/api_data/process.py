@@ -154,7 +154,25 @@ class DataProcessor(object):
     def alerts_df(self, df):
         return df[self.cols +self.alerts_cols]
     
-    
+    def process(self):
+        alerts = self.update_and_transform('alerts')
+        hourly = self.update_and_transform('hourly')
+        daily = self.update_and_transform('daily')
+        alertregions = self.alerts_regions_df(df=alerts)
+        alerts = self.alerts_df(df=alerts)
+        hourlyinfo = self.info_df(df=hourly)
+        hourlystats = self.hourly_stats_df(df=hourly)
+        dailyinfo = self.info_df(df=daily)
+        dailystats = self.daily_stats_df(df=daily)
+        df_dict = {
+            'api_data_alertregions':alertregions, 
+            'api_data_alerts':alerts, 
+            'api_data_hourlyinfo':hourlyinfo, 
+            'api_data_hourlystats':hourlystats, 
+            'api_data_dailyinfo':dailyinfo, 
+            'api_data_dailystats':dailystats
+            }
+        return df_dict
     
 class DataIngestor(object):
     
@@ -180,7 +198,7 @@ class DataIngestor(object):
         
     def ingest(self, df, table_name):
         df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False)
-    
+        
     
     
 # dp = DataProcessor(data=data)
