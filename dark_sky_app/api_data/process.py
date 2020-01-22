@@ -3,19 +3,19 @@ import pandas as pd
 import datetime
 import os
 from Geohash import encode
-from dark_sky_app.dark_sky_app import settings
+from dark_sky_app import settings
 from sqlalchemy import create_engine
 import psycopg2
 
-#load fetched data
-files = os.listdir()
-jsons = [item for item in files if '.json' in item]
-last_json = max(jsons, key=os.path.getctime)
-with open(last_json, encoding='utf-8') as f:
-    data = json.load(f)
+#load fetched datase
+# files = os.listdir()
+# jsons = [item for item in files if '.json' in item]
+# last_json = max(jsons, key=os.path.getctime)
+# with open(last_json, encoding='utf-8') as f:
+#     data = json.load(f)
 
-#change to list of dicts    
-data_dict = [json.loads(item) for item in data]
+# #change to list of dicts    
+# data_dict = [json.loads(item) for item in data]
 class DataProcessor(object):
     
     cols = ['geohash',
