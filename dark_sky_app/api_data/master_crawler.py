@@ -19,7 +19,6 @@ class MasterCrawler(object):
                     secret_key=self.key, 
                     loc_data=self.mapping_data, 
                     exclude_args = fetch.exclude_args))
-            import pdb; pdb.set_trace()
             processor = DataProcessor(response_data)
             processed_data = processor.process()
             
