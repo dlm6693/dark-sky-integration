@@ -129,22 +129,19 @@ dmypy.json
 .pyre/
 
 #more stuff
-2020-01-13_forecasts.json
-2020-01-14_forecasts.json
-2020-01-15_forecasts.json
-2020-01-20_forecasts.json
+*.json
 secret_key.txt
 .ipynb_checkpoints/
 dark_sky_app/dark_sky_app/db_pass.txt
-Untitled.ipynb
-Untitled1.ipynb
-worksheet.ipynb
-alerts.csv
-alerts_regions.csv
-daily.csv
-daily_info.csv
-daily_stats.csv
-hourly.csv
-hourly_info.csv
-hourly_stats.csv
+*.ipynb
+*.csv
 Remote_Remove/
+
+#heroku
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+venv/
