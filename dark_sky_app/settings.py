@@ -20,12 +20,19 @@ PASS_DIR = os.path.join(BASE_DIR, 'db_pass.txt')
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'z08#1hm=yx&nwbs(0k^-%=#d1oue7b@xd%*rs@&!la16x!!7#8'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '0.0.0.0', 
+    'localhost', 
+    '127.0.0.1',
+    'http://dark-sky-integration.herokuapp.com/',
+    ]
 
 
 # Application definition
