@@ -6,6 +6,7 @@ from Geohash import encode
 from dark_sky_app import settings
 from sqlalchemy import create_engine
 import psycopg2
+import uuid
 
 #load fetched datase
 # files = os.listdir()
@@ -18,10 +19,13 @@ import psycopg2
 # data_dict = [json.loads(item) for item in data]
 class DataProcessor(object):
     
-    cols = ['geohash',
-            'latitude',
-            'longitude',
-            'time']
+    cols = [
+        'forecastID',
+        'geohash',
+        'latitude',
+        'longitude',
+        'time'
+        ]
     
     info_cols = ['icon',
                  'precipType',
@@ -113,6 +117,7 @@ class DataProcessor(object):
             refined_data.append(data)
         df_list = [pd.DataFrame(item) for item in refined_data]
         df = pd.concat(df_list).reset_index(drop=True)
+        df['forecastID'] = [uuid.uuid4() for _ in range(len(df.index))]
         if 'precipType' and 'precipAccumulation' in df.columns:
             df = self.null_handler(df)
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
@@ -130,7 +135,7 @@ class DataProcessor(object):
         return df[self.cols+self.info_cols]
     
     def hourly_stats_df(self, df):
-        return df[self.cols+self.stats_cols]
+        return df[self.cols+self.stats_cols+self.hourly_stats_cols]
     
     def daily_stats_df(self, df):
         return df[self.cols+self.stats_cols+self.daily_stats_cols]
@@ -148,6 +153,7 @@ class DataProcessor(object):
                 data_dict['latitude'] = v['latitude']
                 data_dict['longitude'] = v['longitude']
                 data_dict['geohash'] = v['geohash']
+                data_dict['forecastID'] = v['forecastID']
                 data.append(data_dict)
         return pd.DataFrame(data)
     
@@ -197,7 +203,7 @@ class DataIngestor(object):
         self.engine = create_engine(database_url, echo=True)
         
     def ingest(self, df, table_name):
-        df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False)
+        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False)
     
     def dispose_and_close(self):
         self.conn.close()
