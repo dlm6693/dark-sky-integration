@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'api_data',
     'whitenoise.runserver_nostatic',
+    'ddtrace.contrib.django',
 ]
 
 MIDDLEWARE = [
@@ -150,3 +151,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
 django_heroku.settings(locals())
+
+DATADOG_TRACE = {
+    'DEFAULT_SERVICE': 'postgresql-11.6',
+    'TAGS': {'env': 'data_app_proj'},
+}
