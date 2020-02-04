@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 class Base(models.Model):
-    forecastID = models.UUIDField(auto_created=True, primary_key=True, serialize=True, unique=True)
+    forecastID = models.UUIDField(auto_created=True, serialize=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     geohash = models.CharField(max_length=12, null=True)
@@ -33,16 +33,19 @@ class AlertRegions(Base):
     
     region = models.CharField(max_length=255)
     expires = models.DateTimeField()
-    alert = models.ForeignKey('Alerts', related_name = 'regions', to_field='forecastID', on_delete=models.CASCADE)
     
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['geohash', 'time', 'expires'], name='regions_unique_together')
+            models.UniqueConstraint(fields=['geohash', 'region', 'time', 'expires'], name='regions_unique_together')
         ]
         verbose_name_plural = 'AlertRegions'
     
     def __str__(self):
         return self.region
+    
+    @property
+    def alert(self):
+        return Alerts.objects.get(forecastID = self.forecastID)
 
 class InfoBase(Base):
     
@@ -58,23 +61,27 @@ class InfoBase(Base):
 
 class HourlyInfo(InfoBase):
     
-    stats = models.ForeignKey('HourlyStats', related_name = 'hinfo', to_field='forecastID', on_delete=models.CASCADE)
-    
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['geohash', 'time'], name='hourly_info_unique_together')
             ]
         verbose_name_plural = 'HourlyInfo'
+    
+    @property
+    def stats(self):
+        return HourlyStats.objects.get(forecastID = self.forecastID)
 
 class DailyInfo(InfoBase):
-    
-    stats = models.ForeignKey('DailyStats', related_name = 'dinfo', to_field='forecastID', on_delete=models.CASCADE)
     
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['geohash', 'time'], name='daily_info_unique_together')
             ]
         verbose_name_plural = 'DailyInfo'
+    
+    @property
+    def stats(self):
+        return DailyStats.objects.get(forecastID = self.forecastID)
     
 
 class StatsBase(Base):
@@ -123,7 +130,6 @@ class StatsBase(Base):
         
 class HourlyStats(StatsBase):
     
-    info = models.ForeignKey('HourlyInfo', related_name = 'hstats', to_field='forecastID', on_delete=models.CASCADE)
     apparentTemperature = models.FloatField()
     temperature = models.FloatField()
     # info = models.ForeignKey('HourlyInfo', related_name = 'stats', on_delete=models.CASCADE)
@@ -133,10 +139,13 @@ class HourlyStats(StatsBase):
             models.UniqueConstraint(fields=['geohash', 'time'], name='hourly_stats_unique_together')
             ]
         verbose_name_plural = 'HourlyStats'
+        
+    @property
+    def info(self):
+        return HourlyInfo.objects.get(forecastID=self.forecastID)
     
 class DailyStats(StatsBase):    
 
-    info = models.ForeignKey('DailyInfo', related_name = 'dstats', to_field='forecastID', on_delete=models.CASCADE)
     apparentTemperatureHigh = models.FloatField()
     apparentTemperatureHighTime = models.DateTimeField()
     apparentTemperatureLow = models.FloatField()
@@ -167,4 +176,9 @@ class DailyStats(StatsBase):
             models.UniqueConstraint(fields=['geohash', 'time'], name='daily_stats_unique_together')
             ]
         verbose_name_plural = 'DailyStats'
+    
+    @property
+    def info(self):
+        return DailyInfo.objects.get(forecastID=self.forecastID)
+        
     
