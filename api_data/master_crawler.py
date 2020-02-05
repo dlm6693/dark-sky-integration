@@ -25,7 +25,7 @@ class MasterCrawler(object):
             ingestor = DataIngestor()
             
             for key, value in processed_data.items():
-                import pdb; pdb.set_trace()
+
                 ingestor.ingest(df=value, table_name=key)
             
             ingestor.dispose_and_close()

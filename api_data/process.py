@@ -5,8 +5,10 @@ import os
 from Geohash import encode
 from dark_sky_app import settings
 from sqlalchemy import create_engine
+from sqlalchemy.types import TIMESTAMP
 import psycopg2
 import uuid
+import re
 
 #load fetched datase
 # files = os.listdir()
@@ -203,7 +205,25 @@ class DataIngestor(object):
         self.engine = create_engine(database_url, echo=True)
         
     def ingest(self, df, table_name):
-        df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False)
+        
+        time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
+        conv_dict = {col:TIMESTAMP(timezone=True) for col in time_cols}
+        
+        if 'alertregions' in table_name:
+            comp_cols = ['geohash', 'region', 'time', 'expires']
+        elif 'alerts' in table_name:
+            comp_cols = ['geohash', 'time', 'expires']
+        else:
+            comp_cols = ['geohash', 'time']
+            update_objects = [tuple(item) for index, item in df[comp_cols].iterrows()]
+            placeholders = [tuple((x,f"Timestamptz('"{str(y)}"')")) for x, y in update_objects]
+            b_string = str(comp_cols).replace("[", "(").replace("]", ")").replace("'","") + " = "
+        or_string = " ".join([b_string + str(x) + " or" for x in updates])[:-3].replace('"',"")
+        
+        delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE " + "("+",".join(comp_cols)+")" + " in (%s))" % placeholders
+        
+        
+        df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False, dtype=conv_dict)
     
     def dispose_and_close(self):
         self.conn.close()
