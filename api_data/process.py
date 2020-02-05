@@ -203,27 +203,44 @@ class DataIngestor(object):
         database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
         self.conn = psycopg2.connect(dbname=database_name, user=user, host=host, password=password, port=port)
         self.engine = create_engine(database_url, echo=True)
+        self.cursor = self.conn.cursor()
         
     def ingest(self, df, table_name):
         
-        time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
-        conv_dict = {col:TIMESTAMP(timezone=True) for col in time_cols}
-        
         if 'alertregions' in table_name:
-            comp_cols = ['geohash', 'region', 'time', 'expires']
+            comp_cols = ['geohash', 'time', 'expires', 'region']
         elif 'alerts' in table_name:
             comp_cols = ['geohash', 'time', 'expires']
         else:
             comp_cols = ['geohash', 'time']
-            update_objects = [tuple(item) for index, item in df[comp_cols].iterrows()]
-            placeholders = [tuple((x,f"Timestamptz('"{str(y)}"')")) for x, y in update_objects]
-            b_string = str(comp_cols).replace("[", "(").replace("]", ")").replace("'","") + " = "
-        or_string = " ".join([b_string + str(x) + " or" for x in updates])[:-3].replace('"',"")
+        update_objects = [tuple(item) for index, item in df[comp_cols].iterrows()]
+        placeholders = []
+        for item in update_objects:
+            li_item = list(item)
+            timestamps = [li_item[1]]
+            if len(li_item) >= 3:
+                ets = li_item[2]
+                timestamps.append(ets)
+            if all(isinstance(ts, pd.Timestamp) for ts in timestamps):
+                sql_time_strings = [f"Timestamptz('{str(ts)}')" for ts in timestamps]
+            else:
+                raise Exception("Type of objects must be timestamp. Please reformat your data structure and try again.")
+            new_item = [x for x in item if x not in timestamps]
+            for idx, ts in enumerate(sql_time_strings):
+                new_item.insert(idx+1, ts)
+            placeholders.append(tuple(new_item))
+        cleaned_col_string = str(comp_cols).replace("[", "(").replace("]", ")").replace("'","")
+        b_string = f"{cleaned_col_string} = "
+        or_string = " ".join([f"{b_string}{str(x)} or" for x in placeholders])[:-3].replace('"',"")
         
-        delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE " + "("+",".join(comp_cols)+")" + " in (%s))" % placeholders
+        delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE {or_string})"
+        import pdb; pdb.set_trace()
+        self.cursor.execute(delete_query)
+        self.conn.commit()
         
-        
-        df.to_sql(name=table_name, con=self.engine, if_exists='replace', index=False, dtype=conv_dict)
+        time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
+        conv_dict = {col:TIMESTAMP(timezone=True) for col in time_cols}
+        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict)
     
     def dispose_and_close(self):
         self.conn.close()
