@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import dj_database_url
 import django_heroku
+from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,12 +24,12 @@ PASS_DIR = os.path.join(BASE_DIR, 'db_pass.txt')
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+SECRET_KEY = config('SECRET_KEY')
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     '0.0.0.0', 
@@ -100,7 +101,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-db_from_env = dj_database_url.config(conn_max_age=600)
+db_from_env = dj_database_url.config(default=config('DATABASE_URL'))
 DATABASES['default'].update(db_from_env)
 
 
