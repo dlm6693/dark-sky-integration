@@ -1,9 +1,10 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+import uuid
 
 # Create your models here.
 class Base(models.Model):
-    forecastID = models.UUIDField(auto_created=True, serialize=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     latitude = models.FloatField()
     longitude = models.FloatField()
     geohash = models.CharField(max_length=12, null=True)
@@ -30,7 +31,7 @@ class Alerts(Base):
         return self.title
     
 class AlertRegions(Base):
-    
+    alertID = models.ForeignKey('Alerts', related_name='regions', on_delete=models.CASCADE)
     region = models.CharField(max_length=255)
     expires = models.DateTimeField()
     

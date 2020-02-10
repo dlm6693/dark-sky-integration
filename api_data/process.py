@@ -22,7 +22,7 @@ import re
 class DataProcessor(object):
     
     cols = [
-        'forecastID',
+        'ID',
         'geohash',
         'latitude',
         'longitude',
@@ -104,22 +104,24 @@ class DataProcessor(object):
             lng = item['longitude']
             tz = item['timezone']
             if data_type in ['alerts', 'ALERTS', 'Alerts', 'alert', 'ALERT']:
-                try:
-                    data = item['alerts']
-                except KeyError:
-                    continue
+                data = item.get('alerts')
             elif data_type in ['hourly', 'Hourly', 'HOURLY']:
-                data = item['hourly']['data']
+                data = item['hourly'].get('data')
             elif data_type in ['daily', 'DAILY', 'Daily']:
-                data = item['daily']['data']
+                data = item['daily'].get('data')
             else:
                 raise Exception('Unrecognized data section passed')
-            for v in data:
-                v.update({'latitude':lat, 'longitude':lng, 'tzone':tz})
+            try:
+                for v in data:
+                    v.update({'latitude':lat, 'longitude':lng, 'tzone':tz})
+            except:
+                continue
             refined_data.append(data)
-        df_list = [pd.DataFrame(item) for item in refined_data]
+        df_list = [pd.DataFrame(item) for item in refined_data if item]
+        if not df_list:
+            return pd.DataFrame()
         df = pd.concat(df_list).reset_index(drop=True)
-        df['forecastID'] = [uuid.uuid4() for _ in range(len(df.index))]
+        df['ID'] = [uuid.uuid4() for _ in range(len(df.index))]
         if 'precipType' and 'precipAccumulation' in df.columns:
             df = self.null_handler(df)
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
@@ -143,23 +145,27 @@ class DataProcessor(object):
         return df[self.cols+self.stats_cols+self.daily_stats_cols]
     
     def alerts_regions_df(self, df):
-        # df['regions'] = df['regions'].map(lambda x:x.strip("]['").split(', '))
+        if df.empty:
+            return df
         regions_df = df[self.cols+self.alerts_regions_cols]
         data = []
         for i,v in regions_df.iterrows():
             for lst in v['regions']:
                 data_dict = {}
+                data_dict['ID'] = uuid.uuid4()
                 data_dict['region'] = lst
                 data_dict['time'] = v['time']
                 data_dict['expires'] = v['expires']
                 data_dict['latitude'] = v['latitude']
                 data_dict['longitude'] = v['longitude']
                 data_dict['geohash'] = v['geohash']
-                data_dict['forecastID'] = v['forecastID']
+                data_dict['alertID'] = v['ID']
                 data.append(data_dict)
         return pd.DataFrame(data)
     
     def alerts_df(self, df):
+        if df.empty:
+            return df
         return df[self.cols +self.alerts_cols]
     
     def process(self):
@@ -234,7 +240,6 @@ class DataIngestor(object):
         or_string = " ".join([f"{b_string}{str(x)} or" for x in placeholders])[:-3].replace('"',"")
         
         delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE {or_string})"
-        import pdb; pdb.set_trace()
         self.cursor.execute(delete_query)
         self.conn.commit()
         

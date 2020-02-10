@@ -152,8 +152,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
 django_heroku.settings(locals())
-
-DATADOG_TRACE = {
-    'DEFAULT_SERVICE': 'postgresql-11.6',
-    'TAGS': {'env': 'data_app_proj'},
-}

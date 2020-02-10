@@ -25,7 +25,7 @@ class MasterCrawler(object):
             ingestor = DataIngestor()
             
             for key, value in processed_data.items():
-
-                ingestor.ingest(df=value, table_name=key)
+                if not value.empty:
+                    ingestor.ingest(df=value, table_name=key)
             
             ingestor.dispose_and_close()
