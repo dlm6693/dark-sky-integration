@@ -22,7 +22,7 @@ import re
 class DataProcessor(object):
     
     cols = [
-        'ID',
+        'id',
         'geohash',
         'latitude',
         'longitude',
@@ -121,7 +121,7 @@ class DataProcessor(object):
         if not df_list:
             return pd.DataFrame()
         df = pd.concat(df_list).reset_index(drop=True)
-        df['ID'] = [uuid.uuid4() for _ in range(len(df.index))]
+        df['id'] = [uuid.uuid4() for _ in range(len(df.index))]
         if 'precipType' and 'precipAccumulation' in df.columns:
             df = self.null_handler(df)
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
