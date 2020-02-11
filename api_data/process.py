@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 import os
 from Geohash import encode
-from django.conf import settings
+from dark_sky_app import settings
 from sqlalchemy import create_engine
 from sqlalchemy.types import TIMESTAMP
 import psycopg2

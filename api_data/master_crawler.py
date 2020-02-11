@@ -3,7 +3,7 @@ from fetch import Fetch
 import asyncio
 import os
 import pandas as pd
-from django.conf import settings
+from .dark_sky_app import settings
 import psycopg2
 from sqlalchemy import create_engine
 
@@ -49,11 +49,3 @@ class DBConnector(object):
         self.cursor.execute('SELECT latidude, longitude FROM api_data_mappingdata')
         data = list(self.cursor.fetchall())
         return data
-import pdb; pdb.set_trace()
-if __name__ == '__main__':
-    settings.configure()
-    key = os.environ.get('DARK_SKY_SECRET_KEY')
-    dbc = DBConnector(key)
-    data = dbc.grab_mapping_data()
-    mc = MasterCrawler(key, data)
-    mc.crawl()
