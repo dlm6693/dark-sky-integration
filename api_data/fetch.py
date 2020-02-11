@@ -33,9 +33,9 @@ class Fetch(object):
     async def main(self, url_template, secret_key, loc_data, exclude_args):
         base_url = f"{url_template}{secret_key}"
         urls = []
-        for index, row in loc_data.iterrows():
-            lat = row["lat"]
-            lng = row["lng"]
+        for tup in loc_data:
+            lat = tup[0]
+            lng = tup[1]
             url = f"{base_url}/{lat},{lng}/?exclude={exclude_args}"
             urls.append(url)
 
