@@ -1,12 +1,15 @@
 from django.db import models
 
 class SeparatedValuesField(models.TextField):
-    __metaclass__ = models.SubfieldBase
 
     def __init__(self, *args, **kwargs):
         self.token = kwargs.pop('token', ',')
         super(SeparatedValuesField, self).__init__(*args, **kwargs)
 
+    def from_db_value(self, value, expression, connection):
+        if not value: return
+        return value.split(self.token)
+    
     def to_python(self, value):
         if not value: return
         if isinstance(value, list):
