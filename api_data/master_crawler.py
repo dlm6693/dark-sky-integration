@@ -1,9 +1,10 @@
-from process import DataProcessor, DataIngestor
-from fetch import Fetch
-import asyncio
 import os
+import sys
+from api_data.process import DataProcessor, DataIngestor
+from api_data.fetch import Fetch
+import asyncio
 import pandas as pd
-from .dark_sky_app import settings
+from dark_sky_app import settings
 import psycopg2
 from sqlalchemy import create_engine
 
@@ -14,6 +15,7 @@ class MasterCrawler(object):
         self.key = key
     
     def crawl(self):
+        import pdb; pdb.set_trace()
         fetch = Fetch(self.mapping_data)
         # calling main
         response_data = asyncio.run(fetch.main(
@@ -46,6 +48,6 @@ class DBConnector(object):
         self.cursor = self.conn.cursor()
         
     def grab_mapping_data(self):
-        self.cursor.execute('SELECT latidude, longitude FROM api_data_mappingdata')
-        data = list(self.cursor.fetchall())
+        self.cursor.execute('SELECT latitude, longitude FROM api_data_mappingdata')
+        data = list(self.cursor.fetchall())[:10]
         return data

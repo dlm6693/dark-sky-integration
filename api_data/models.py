@@ -32,7 +32,7 @@ class Alerts(Base):
         return self.title
     
 class AlertRegions(Base):
-    alertID = models.ForeignKey('Alerts', related_name='regions', on_delete=models.CASCADE)
+    alert = models.ForeignKey('Alerts', related_name='regions', on_delete=models.CASCADE)
     region = models.CharField(max_length=255)
     expires = models.DateTimeField()
     

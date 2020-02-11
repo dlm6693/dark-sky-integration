@@ -1,7 +1,9 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import json
 import pandas as pd
 import datetime
-import os
 from Geohash import encode
 from dark_sky_app import settings
 from sqlalchemy import create_engine
@@ -10,15 +12,6 @@ import psycopg2
 import uuid
 import re
 
-#load fetched datase
-# files = os.listdir()
-# jsons = [item for item in files if '.json' in item]
-# last_json = max(jsons, key=os.path.getctime)
-# with open(last_json, encoding='utf-8') as f:
-#     data = json.load(f)
-
-# #change to list of dicts    
-# data_dict = [json.loads(item) for item in data]
 class DataProcessor(object):
     
     cols = [
@@ -152,14 +145,14 @@ class DataProcessor(object):
         for i,v in regions_df.iterrows():
             for lst in v['regions']:
                 data_dict = {}
-                data_dict['ID'] = uuid.uuid4()
+                data_dict['id'] = uuid.uuid4()
                 data_dict['region'] = lst
                 data_dict['time'] = v['time']
                 data_dict['expires'] = v['expires']
                 data_dict['latitude'] = v['latitude']
                 data_dict['longitude'] = v['longitude']
                 data_dict['geohash'] = v['geohash']
-                data_dict['alertID'] = v['ID']
+                data_dict['alert_id'] = v['id']
                 data.append(data_dict)
         return pd.DataFrame(data)
     
@@ -174,6 +167,7 @@ class DataProcessor(object):
         daily = self.update_and_transform('daily')
         alertregions = self.alerts_regions_df(df=alerts)
         alerts = self.alerts_df(df=alerts)
+        import pdb; pdb.set_trace()
         hourlyinfo = self.info_df(df=hourly)
         hourlystats = self.hourly_stats_df(df=hourly)
         dailyinfo = self.info_df(df=daily)
@@ -240,6 +234,7 @@ class DataIngestor(object):
         or_string = " ".join([f"{b_string}{str(x)} or" for x in placeholders])[:-3].replace('"',"")
         
         delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE {or_string})"
+        import pdb; pdb.set_trace()
         self.cursor.execute(delete_query)
         self.conn.commit()
         
