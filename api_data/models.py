@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, int_list_validator
 import uuid
 
 # Create your models here.
@@ -181,5 +181,33 @@ class DailyStats(StatsBase):
     @property
     def info(self):
         return DailyInfo.objects.get(forecastID=self.forecastID)
-        
+
+class MappingData(models.Model):
+    ID = models.AutoField(primary_key=True, editable=False, db_column='id')
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    city = models.CharField()
+    state_id = models.CharField(max_length=2)
+    state_name = models.CharField(max_length=100)
+    county_flips = models.IntegerField()
+    county_name = models.CharField(max_length=100)
+    county_flips_all = models.CharField()
+    county_name_all = models.CharField()
+    population = models.IntegerField(
+        validators = [MinValueValidator(0)]
+    )
+    density = models.IntegerField(
+        validators = [MinValueValidator(0)]
+    )
+    incorporated = models.BooleanField()
+    timezone = models.CharField(max_length=100)
+    ranking = models.PositiveSmallIntegerField(
+        validators = [MinValueValidator(1), MaxValueValidator(3)]
+    )
+    zips = models.CharField(
+        validators = [int_list_validator]
+    )
+    
+    
+    
     
