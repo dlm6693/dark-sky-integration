@@ -48,5 +48,5 @@ class DBConnector(object):
         
     def grab_mapping_data(self):
         self.cursor.execute('SELECT latitude, longitude FROM api_data_mappingdata')
-        data = list(self.cursor.fetchall())[:10]
+        data = list(self.cursor.fetchall())
         return data

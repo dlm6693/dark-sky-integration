@@ -234,8 +234,10 @@ class DataIngestor(object):
         
         delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE {or_string})"
         self.cursor.execute(delete_query)
-        self.conn.commit()
-        
+        try:
+            self.conn.commit()
+        except:
+            import pdb; pdb.set_trace()
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
         conv_dict = {col:TIMESTAMP(timezone=True) for col in time_cols}
         df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict)
