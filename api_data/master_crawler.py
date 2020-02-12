@@ -15,7 +15,6 @@ class MasterCrawler(object):
         self.key = key
     
     def crawl(self):
-        import pdb; pdb.set_trace()
         fetch = Fetch(self.mapping_data)
         # calling main
         response_data = asyncio.run(fetch.main(

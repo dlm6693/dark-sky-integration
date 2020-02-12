@@ -31,6 +31,9 @@ class Alerts(Base):
     def __str__(self):
         return self.title
     
+    def has_alert(self):
+        return self.alert_id is not None
+    
 class AlertRegions(Base):
     alertID = models.ForeignKey('Alerts', related_name='regions', on_delete=models.CASCADE, db_column='alert_id')
     region = models.CharField(max_length=255)
@@ -59,6 +62,8 @@ class InfoBase(Base):
         return f"{self.geohash}, {self.time}"
 
 class HourlyInfo(InfoBase):
+
+    stats = models.OneToOneField('HourlyStats', related_name='info', on_delete=models.CASCADE)
     
     class Meta:
         constraints = [
@@ -71,6 +76,8 @@ class HourlyInfo(InfoBase):
         return HourlyStats.objects.get(ID = self.ID)
 
 class DailyInfo(InfoBase):
+    
+    stats = models.OneToOneField('DailyStats', related_name='info', on_delete=models.CASCADE)
     
     class Meta:
         constraints = [
@@ -129,6 +136,7 @@ class StatsBase(Base):
         
 class HourlyStats(StatsBase):
     
+    info = models.OneToOneField('HourlyInfo', related_name='stats', on_delete=models.CASCADE)
     apparentTemperature = models.FloatField()
     temperature = models.FloatField()
     # info = models.ForeignKey('HourlyInfo', related_name = 'stats', on_delete=models.CASCADE)
@@ -145,6 +153,7 @@ class HourlyStats(StatsBase):
     
 class DailyStats(StatsBase):    
 
+    info = models.OneToOneField('DailyInfo', related_name='stats', on_delete=models.CASCADE)
     apparentTemperatureHigh = models.FloatField()
     apparentTemperatureHighTime = models.DateTimeField()
     apparentTemperatureLow = models.FloatField()

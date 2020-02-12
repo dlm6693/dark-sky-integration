@@ -171,9 +171,9 @@ class DataProcessor(object):
         hourlystats = self.hourly_stats_df(df=hourly)
         dailyinfo = self.info_df(df=daily)
         dailystats = self.daily_stats_df(df=daily)
-        df_dict = {
-            'api_data_alertregions':alertregions, 
+        df_dict = { 
             'api_data_alerts':alerts, 
+            'api_data_alertregions':alertregions,
             'api_data_hourlyinfo':hourlyinfo, 
             'api_data_hourlystats':hourlystats, 
             'api_data_dailyinfo':dailyinfo, 
@@ -233,7 +233,6 @@ class DataIngestor(object):
         or_string = " ".join([f"{b_string}{str(x)} or" for x in placeholders])[:-3].replace('"',"")
         
         delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE {or_string})"
-        import pdb; pdb.set_trace()
         self.cursor.execute(delete_query)
         self.conn.commit()
         
