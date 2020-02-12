@@ -32,7 +32,7 @@ class Alerts(Base):
         return self.title
     
 class AlertRegions(Base):
-    alert = models.ForeignKey('Alerts', related_name='regions', on_delete=models.CASCADE)
+    alertID = models.ForeignKey('Alerts', related_name='regions', on_delete=models.CASCADE, db_column='alert_id')
     region = models.CharField(max_length=255)
     expires = models.DateTimeField()
     
@@ -45,9 +45,6 @@ class AlertRegions(Base):
     def __str__(self):
         return self.region
     
-    @property
-    def alert(self):
-        return Alerts.objects.get(forecastID = self.forecastID)
 
 class InfoBase(Base):
     
@@ -71,7 +68,7 @@ class HourlyInfo(InfoBase):
     
     @property
     def stats(self):
-        return HourlyStats.objects.get(forecastID = self.forecastID)
+        return HourlyStats.objects.get(ID = self.ID)
 
 class DailyInfo(InfoBase):
     
@@ -83,7 +80,7 @@ class DailyInfo(InfoBase):
     
     @property
     def stats(self):
-        return DailyStats.objects.get(forecastID = self.forecastID)
+        return DailyStats.objects.get(ID = self.ID)
     
 
 class StatsBase(Base):
@@ -144,7 +141,7 @@ class HourlyStats(StatsBase):
         
     @property
     def info(self):
-        return HourlyInfo.objects.get(forecastID=self.forecastID)
+        return HourlyInfo.objects.get(ID=self.ID)
     
 class DailyStats(StatsBase):    
 
@@ -181,7 +178,7 @@ class DailyStats(StatsBase):
     
     @property
     def info(self):
-        return DailyInfo.objects.get(forecastID=self.forecastID)
+        return DailyInfo.objects.get(ID=self.ID)
 
 class MappingData(models.Model):
     ID = models.AutoField(primary_key=True, editable=False, db_column='id')

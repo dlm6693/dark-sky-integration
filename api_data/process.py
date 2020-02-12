@@ -167,7 +167,6 @@ class DataProcessor(object):
         daily = self.update_and_transform('daily')
         alertregions = self.alerts_regions_df(df=alerts)
         alerts = self.alerts_df(df=alerts)
-        import pdb; pdb.set_trace()
         hourlyinfo = self.info_df(df=hourly)
         hourlystats = self.hourly_stats_df(df=hourly)
         dailyinfo = self.info_df(df=daily)
