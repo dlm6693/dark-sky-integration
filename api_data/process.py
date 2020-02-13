@@ -203,16 +203,10 @@ class DataIngestor(object):
         self.conn = psycopg2.connect(dbname=database_name, user=user, host=host, password=password, port=port)
         self.engine = create_engine(database_url, echo=True)
         self.cursor = self.conn.cursor()
+    
+    def query_string_interpolation(self, df, columns):
         
-    def ingest(self, df, table_name):
-        
-        if 'alertregions' in table_name:
-            comp_cols = ['geohash', 'time', 'expires', 'region']
-        elif 'alerts' in table_name:
-            comp_cols = ['geohash', 'time', 'expires']
-        else:
-            comp_cols = ['geohash', 'time']
-        update_objects = [tuple(item) for index, item in df[comp_cols].iterrows()]
+        update_objects = [tuple(item) for index, item in df[columns].iterrows()]
         placeholders = []
         for item in update_objects:
             li_item = list(item)
@@ -228,20 +222,33 @@ class DataIngestor(object):
             for idx, ts in enumerate(sql_time_strings):
                 new_item.insert(idx+1, ts)
             placeholders.append(tuple(new_item))
-        cleaned_col_string = str(comp_cols).replace("[", "(").replace("]", ")").replace("'","")
+        cleaned_col_string = str(columns).replace("[", "(").replace("]", ")").replace("'","")
         b_string = f"{cleaned_col_string} = "
         or_string = " ".join([f"{b_string}{str(x)} or" for x in placeholders])[:-3].replace('"',"")
+        return or_string
+    
+    def ingest(self, df, table_name):
         
-        delete_query = f"DELETE FROM {table_name} WHERE EXISTS (SELECT * FROM {table_name} WHERE {or_string})"
+        if 'alertregions' in table_name:
+            comp_cols = ['geohash', 'time', 'expires', 'region']
+            update_cols = ['geohash', 'time', 'expires']
+        elif 'alerts' in table_name:
+            comp_cols = ['geohash', 'time', 'expires']
+        else:
+            comp_cols = ['geohash', 'time']
+        df.drop_duplicates(subset=comp_cols, inplace=True)
+        or_string = query_string_interpolation(df, comp_cols)
+        
+        delete_query = f"DELETE FROM {table_name} WHERE id IN (SELECT id FROM {table_name} WHERE {or_string})"
         self.cursor.execute(delete_query)
-        try:
-            self.conn.commit()
-        except:
-            import pdb; pdb.set_trace()
+        self.conn.commit()
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
         conv_dict = {col:TIMESTAMP(timezone=True) for col in time_cols}
-        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict)
-    
+        try:
+            df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict)
+        except:
+            import pdb; pdb.set_trace()
+            
     def dispose_and_close(self):
         self.conn.close()
         self.engine.dispose()

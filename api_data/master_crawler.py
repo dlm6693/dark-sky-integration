@@ -29,6 +29,7 @@ class MasterCrawler(object):
         
         for key, value in processed_data.items():
             if not value.empty:
+                value.to_csv(f"{key}.csv", index=False)
                 ingestor.ingest(df=value, table_name=key)
         
         ingestor.dispose_and_close()
