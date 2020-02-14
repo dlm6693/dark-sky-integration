@@ -233,18 +233,18 @@ class DataIngestor(object):
             comp_cols = ['geohash', 'time', 'expires', 'region']
             update_cols = ['geohash', 'time', 'expires']
             str_cols = ", ".join(update_cols)
-            update_or_string = or_string = query_string_interpolation(df, update_cols)
+            update_or_string = self.query_string_interpolation(df, update_cols)
             update_query = f"SELECT id, {str_cols} FROM api_data_alerts WHERE {update_or_string}"
-            alerts = pd.read_sql(con=engine,sql=update_query)
+            alerts = pd.read_sql(con=self.engine,sql=update_query)
             for index, item in alerts.iterrows():
-                values = df[(df['time'] == item['time']) & (df['geohash'] == item['geohash']) & (df['expires'] == item['expires'])]
-                values['alert_id'] = item['id']
+                idx_filter = df[(df['time'] == item['time']) & (df['geohash'] == item['geohash']) & (df['expires'] == item['expires'])].index
+                df.loc[idx_filter, 'alert_id'] = item['id']
         elif 'alerts' in table_name:
             comp_cols = ['geohash', 'time', 'expires']
         else:
             comp_cols = ['geohash', 'time']
         df.drop_duplicates(subset=comp_cols, inplace=True)
-        delete_or_string = query_string_interpolation(df, comp_cols)
+        delete_or_string = self.query_string_interpolation(df, comp_cols)
         delete_query = f"DELETE FROM {table_name} WHERE id IN (SELECT id FROM {table_name} WHERE {delete_or_string})"
         self.cursor.execute(delete_query)
         self.conn.commit()
