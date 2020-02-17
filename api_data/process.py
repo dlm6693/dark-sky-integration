@@ -194,11 +194,11 @@ class DataIngestor(object):
 
     def __init__(self):
         
-        user = settings.DATABASES['default']['USER']
-        password = settings.DATABASES['default']['PASSWORD']
-        database_name = settings.DATABASES['default']['NAME']
-        host = settings.DATABASES['default']['HOST']
-        port = settings.DATABASES['default']['PORT']
+        user = settings.db_from_env['USER']
+        password = settings.db_from_env['PASSWORD']
+        database_name = settings.db_from_env['NAME']
+        host = settings.db_from_env['HOST']
+        port = settings.db_from_env['PORT']
         database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
         self.conn = psycopg2.connect(dbname=database_name, user=user, host=host, password=password, port=port)
         self.engine = create_engine(database_url, echo=True)
@@ -255,6 +255,9 @@ class DataIngestor(object):
             df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict)
         except:
             import pdb; pdb.set_trace()
+    
+    def basic_ingest(self, df, table_name):
+        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False)
             
     def dispose_and_close(self):
         self.conn.close()
