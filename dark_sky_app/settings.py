@@ -101,7 +101,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-db_from_env = dj_database_url.config(default=config('DATABASE_URL'))
+db_from_env = dj_database_url.config(default=config('HEROKU_POSTGRESQL_RED_URL'))
 DATABASES['default'].update(db_from_env)
 
 
