@@ -202,7 +202,7 @@ class DataIngestor(object):
         database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
         self.conn = psycopg2.connect(dbname=database_name, user=user, host=host, password=password, port=port)
         self.engine = create_engine(database_url, echo=True)
-        self.cursor = self.conn.cursor()
+        self.cursor = self.conn.cursor('cursor')
     
     def query_string_interpolation(self, df, columns):
         
@@ -259,16 +259,3 @@ class DataIngestor(object):
     def dispose_and_close(self):
         self.conn.close()
         self.engine.dispose()
-        
-    
-    
-# dp = DataProcessor(data=data)
-# alerts = dp.update_and_transform(data_type='alerts')
-# daily = dp.update_and_transform(data_type='daily')
-# hourly = dp.update_and_transform(data_type='hourly')
-# alerts_regions_df = dp.alerts_regions_df(df=alerts)
-# alerts_df = dp.alerts_df(df=alerts)
-# hourly_info_df = dp.info_df(df=hourly)
-# hourly_stats_df = dp.hourly_stats_df(df=hourly)
-# daily_info_df = dp.info_df(df=daily)
-# daily_stats_df = dp.daily_stats_df(df=daily)
