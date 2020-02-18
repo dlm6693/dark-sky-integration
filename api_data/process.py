@@ -251,13 +251,10 @@ class DataIngestor(object):
        
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
         conv_dict = {col:TIMESTAMP(timezone=True) for col in time_cols}
-        try:
-            df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict)
-        except:
-            import pdb; pdb.set_trace()
+        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, dtype=conv_dict, chunksize=1000)
     
     def basic_ingest(self, df, table_name):
-        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False)
+        df.to_sql(name=table_name, con=self.engine, if_exists='append', index=False, chunksize=1000)
             
     def dispose_and_close(self):
         self.conn.close()
