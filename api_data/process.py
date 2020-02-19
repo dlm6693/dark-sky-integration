@@ -246,10 +246,7 @@ class DataIngestor(object):
         df.drop_duplicates(subset=comp_cols, inplace=True)
         delete_or_string = self.query_string_interpolation(df, comp_cols)
         delete_query = f"DELETE FROM {table_name} WHERE id IN (SELECT id FROM {table_name} WHERE {delete_or_string})"
-        try:
-            self.cursor.execute(delete_query)
-        except:
-            import pdb; pdb.set_trace()
+        self.cursor.execute(delete_query)
         self.conn.commit()
        
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
