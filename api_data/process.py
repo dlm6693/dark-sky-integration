@@ -202,7 +202,7 @@ class DataIngestor(object):
         database_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{database_name}'
         self.conn = psycopg2.connect(dbname=database_name, user=user, host=host, password=password, port=port)
         self.engine = create_engine(database_url, echo=True)
-        self.cursor = self.conn.cursor('cursor')
+        self.cursor = self.conn.cursor()
     
     def query_string_interpolation(self, df, columns):
         
@@ -246,7 +246,10 @@ class DataIngestor(object):
         df.drop_duplicates(subset=comp_cols, inplace=True)
         delete_or_string = self.query_string_interpolation(df, comp_cols)
         delete_query = f"DELETE FROM {table_name} WHERE id IN (SELECT id FROM {table_name} WHERE {delete_or_string})"
-        self.cursor.execute(delete_query)
+        try:
+            self.cursor.execute(delete_query)
+        except:
+            import pdb; pdb.set_trace()
         self.conn.commit()
        
         time_cols = [col for col in df.columns if 'time' in col.lower() or 'expires' in col.lower()]
