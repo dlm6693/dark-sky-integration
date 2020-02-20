@@ -132,9 +132,10 @@ dmypy.json
 *.json
 secret_key.txt
 .ipynb_checkpoints/
-dark_sky_app/dark_sky_app/db_pass.txt
+dark_sky_app/db_pass.txt
 *.ipynb
 *.csv
+db_pass.txt
 Remote_Remove/
 
 #heroku

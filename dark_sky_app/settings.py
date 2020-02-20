@@ -18,7 +18,7 @@ from decouple import config
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
-PASS_DIR = os.path.join(BASE_DIR, 'db_pass.txt')
+# PASS_DIR = os.path.join(BASE_DIR, 'db_pass.txt')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -88,15 +88,15 @@ WSGI_APPLICATION = 'dark_sky_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-with open(PASS_DIR, 'r') as f:
-    db_pass = f.read()
+# with open(PASS_DIR, 'r') as f:
+#     db_pass = f.read()
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'dark_sky_data',
         'USER': 'darksky',
-        'PASSWORD': db_pass,
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '5432',
     }
